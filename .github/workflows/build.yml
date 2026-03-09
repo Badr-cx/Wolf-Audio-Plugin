@@ -1,37 +1,81 @@
 name: Generate Wolf Plugin
-on: [push] # كيخدم بوحدو كل ما درتي حفظ
+on: [push]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4 # تحديث للنسخة 4
 
-      - name: Create Plugin Files
+      - name: Create Plugin Directory and Files
         run: |
           mkdir -p wolf_audio
-          # إنشاء ملف الكود
-          echo 'import os, re, requests
+          
+          # إنشاء ملف plugin.py
+          cat <<EOF > wolf_audio/plugin.py
+          import os, re, requests
           from Screens.Screen import Screen
           from Components.ActionMap import ActionMap
           from Components.Label import Label
           
           URL = "https://www.dropbox.com/scl/fi/14q89eob53e8fsyqn5p6r/beIN_Sports.m3u?rlkey=iujtehrgld4lktv6c9bv8fj5l&st=nw4lvy36&dl=1"
+          PATH = "/data/plugin/wolf_audio/"
           
           class WolfAudioSync(Screen):
+              skin = """
+              <screen name="WolfSync" position="center,center" size="400,150" title="Wolf">
+                  <widget name="info" position="10,40" size="380,40" font="Regular;22" halign="center" />
+                  <eLabel text="RED: AUTO SYNC" position="10,100" size="380,30" font="Regular;18" halign="center" foregroundColor="red" />
+              </screen>
+              """
+              def __init__(self, session):
+                  self.session = session
+                  Screen.__init__(self, session)
+                  try: os.system("chmod -R 755 " + PATH)
+                  except: pass
+                  self["info"] = Label("WOLF READY")
+                  self["actions"] = ActionMap(["ColorActions"], {"red": self.sync, "cancel": self.close}, -1)
+          
               def sync(self):
-                  os.system("echo 12000 > /proc/stb/video/videodelay")
-          ' > wolf_audio/plugin.py
+                  self["info"].setText("FETCHING...")
+                  try:
+                      r = requests.get(URL, timeout=10)
+                      if r.status_code == 200:
+                          urls = re.findall(r'http[^\s]+', r.text)
+                          if urls:
+                              os.system("echo 12000 > /proc/stb/video/videodelay")
+                              self["info"].setText("SYNC APPLIED: 12s")
+                          else: self["info"].setText("URL ERROR")
+                      else: self["info"].setText("FETCH ERROR")
+                  except: self["info"].setText("CONN ERROR")
+          
+          def main(session, **kwargs):
+              session.open(WolfAudioSync)
+          
+          def Plugins(**kwargs):
+              from Plugins.Plugin import PluginDescriptor
+              return [PluginDescriptor(name="Wolf Audio", where=PluginDescriptor.WHERE_PLUGINMENU, fnc=main, icon="wolf_logo.png")]
+          EOF
 
-          # إنشاء ملف المعلومات
-          echo '{"name": "Wolf Audio", "version": "1.0.0"}' > wolf_audio/plugin.info
+          # إنشاء ملف plugin.info
+          cat <<EOF > wolf_audio/plugin.info
+          {
+              "name": "Wolf Audio",
+              "version": "1.0.0",
+              "description": "Auto Sync beIN VIP",
+              "author": "Wolf",
+              "plugin_id": "wolf.audio",
+              "start_script": "plugin.py"
+          }
+          EOF
 
       - name: Pack to NGZ
         run: |
-          tar -cvf WOLF.SERVER.ngz wolf_audio/
+          tar -cvf WOLF.SERVER.tar wolf_audio/
+          mv WOLF.SERVER.tar WOLF.SERVER.ngz
 
-      - name: Upload Result
-        uses: actions/upload-artifact@v3
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4 # التحديث المهم هنا للنسخة 4
         with:
-          name: Wolf-Plugin-Ready
+          name: Wolf-Plugin-v1.0
           path: WOLF.SERVER.ngz
