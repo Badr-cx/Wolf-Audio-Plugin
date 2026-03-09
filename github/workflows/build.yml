@@ -1,0 +1,37 @@
+name: Generate Wolf Plugin
+on: [push] # كيخدم بوحدو كل ما درتي حفظ
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Create Plugin Files
+        run: |
+          mkdir -p wolf_audio
+          # إنشاء ملف الكود
+          echo 'import os, re, requests
+          from Screens.Screen import Screen
+          from Components.ActionMap import ActionMap
+          from Components.Label import Label
+          
+          URL = "https://www.dropbox.com/scl/fi/14q89eob53e8fsyqn5p6r/beIN_Sports.m3u?rlkey=iujtehrgld4lktv6c9bv8fj5l&st=nw4lvy36&dl=1"
+          
+          class WolfAudioSync(Screen):
+              def sync(self):
+                  os.system("echo 12000 > /proc/stb/video/videodelay")
+          ' > wolf_audio/plugin.py
+
+          # إنشاء ملف المعلومات
+          echo '{"name": "Wolf Audio", "version": "1.0.0"}' > wolf_audio/plugin.info
+
+      - name: Pack to NGZ
+        run: |
+          tar -cvf WOLF.SERVER.ngz wolf_audio/
+
+      - name: Upload Result
+        uses: actions/upload-artifact@v3
+        with:
+          name: Wolf-Plugin-Ready
+          path: WOLF.SERVER.ngz
