@@ -10,24 +10,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Create Plugin Files Automatically
+      - name: Create Plugin Files
         run: |
-          # 1. إنشاء المجلدات
           mkdir -p Wolf/logos
 
-          # 2. إنشاء ملف __init__.py
-          echo "# -*- coding: utf-8 -*-" > Wolf/__init__.py
-          echo "from os.path import dirname" >> Wolf/__init__.py
-          echo "def getPluginPath(): return dirname(__file__)" >> Wolf/__init__.py
+          # 1. إنشاء ملف __init__.py
+          printf "# -*- coding: utf-8 -*-\nfrom os.path import dirname\ndef getPluginPath(): return dirname(__file__)\n" > Wolf/__init__.py
 
-          # 3. إنشاء ملف plugin.info
-          echo "name=Wolf Auto Sync" > Wolf/plugin.info
-          echo "description=Auto Audio Sync & Logos by Wolf Maroc" >> Wolf/plugin.info
-          echo "version=1.0" >> Wolf/plugin.info
-          echo "author=Wolf Maroc" >> Wolf/plugin.info
+          # 2. إنشاء ملف plugin.info
+          printf "name=Wolf Auto Sync\ndescription=Auto Audio Sync & Logos by Wolf Maroc\nversion=1.0\nauthor=Wolf Maroc\n" > Wolf/plugin.info
 
-          # 4. إنشاء ملف plugin.py (الكود الكامل)
-          cat <<EOF > Wolf/plugin.py
+          # 3. إنشاء ملف plugin.py (باستخدام الطريقة الآمنة)
+          cat << 'EOF' > Wolf/plugin.py
 # -*- coding: utf-8 -*-
 import os, urllib2
 from Screens.Screen import Screen
@@ -85,16 +79,14 @@ def Plugins(**kwargs):
     return [PluginDescriptor(name="Wolf Auto Sync", where=PluginDescriptor.WHERE_PLUGINMENU, fnc=main)]
 EOF
 
-          # 5. نسخ الصور (خاص يكون عندك مجلد logos فيه الصور في GitHub)
+          # 4. نسخ الصور وجمع الـ NGZ
           if [ -d logos ]; then
-            cp logos/*.png Wolf/logos/
+            cp logos/*.png Wolf/logos/ 2>/dev/null || true
           fi
-
-          # 6. الجمع النهائي
           tar -cvf WOLF.SERVER.ngz Wolf/
 
       - name: Upload NGZ
         uses: actions/upload-artifact@v4
         with:
-          name: Wolf-Maroc-v1.0
+          name: Wolf-Maroc-Package
           path: WOLF.SERVER.ngz
