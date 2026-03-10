@@ -5,7 +5,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      # تفعيل Node.js 24 باش نحيدو التنبيه نهائياً
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     steps:
       - name: Checkout code
@@ -15,80 +14,14 @@ jobs:
         run: |
           mkdir -p Wolf/logos
 
-          # 1. إنشاء ملف __init__.py
-          cat << 'EOF' > Wolf/__init__.py
-# -*- coding: utf-8 -*-
-from os.path import dirname
-def getPluginPath():
-    return dirname(__file__)
-EOF
+          # 1. إنشاء ملف __init__.py (Base64)
+          echo "IyAtKi0gY29kaW5nOiB1dGYtOCAtKi0KZnJvbSBvcy5wYXRoIGltcG9ydCBkaXJuYW1lCmRlZiBnZXRQbHVnaW5QYXRoKCk6CiAgICByZXR1cm4gZGlybmFtZShfX2ZpbGVfXyk=" | base64 -d > Wolf/__init__.py
 
-          # 2. إنشاء ملف plugin.info
-          cat << 'EOF' > Wolf/plugin.info
-name=Wolf Auto Sync
-description=Auto Audio Sync & Logos by Wolf Maroc
-version=1.0
-author=Wolf Maroc
-EOF
+          # 2. إنشاء ملف plugin.info (Base64)
+          echo "bmFtZT1Xb2xmIEF1dG8gU3luYwpkZXNjcmlwdGlvbj1BdXRvIEF1ZGlvIFN5bmMgJiBMb2dvcyBieSBXb2xmIE1hcm9jCnZlcnNpb249MS4wCmF1dGhvcj1Xb2xmIE1hcm9j" | base64 -d > Wolf/plugin.info
 
-          # 3. إنشاء ملف plugin.py
-          cat << 'EOF' > Wolf/plugin.py
-# -*- coding: utf-8 -*-
-import os, urllib2
-from Screens.Screen import Screen
-from Components.Pixmap import Pixmap
-from Components.MenuList import MenuList
-from Components.ActionMap import ActionMap
-from Plugins.Plugin import PluginDescriptor
-
-M3U_URL = "https://www.dropbox.com/scl/fi/2m2y1a89ecq3x5iszbe1z/AR__BEIN_SPORT_SD-HAMAVM.m3u?rlkey=nkjezbtac1epykpqr4fwz9rmu&dl=1"
-PLUGIN_PATH = os.path.dirname(__file__)
-
-class WolfFinalSync(Screen):
-    skin = """<screen position="0,0" size="1280,720" flags="wfNoBorder" backgroundColor="transparent">
-        <widget name="menu" position="50,150" size="450,450" scrollbarMode="showOnDemand" />
-        <widget name="dynamic_logo" position="1000,40" size="250,110" alphatest="blend" zPosition="10" />
-    </screen>"""
-
-    def __init__(self, session):
-        Screen.__init__(self, session)
-        self.channels = []
-        self["menu"] = MenuList([])
-        self["dynamic_logo"] = Pixmap()
-        self["actions"] = ActionMap(["SetupActions"], {"ok": self.start_sync, "cancel": self.exit}, -1)
-        self.load_m3u()
-
-    def load_m3u(self):
-        try:
-            req = urllib2.urlopen(M3U_URL)
-            for line in req.readlines():
-                if "#EXTINF" in line:
-                    name = line.split(",")[-1].strip()
-                    logo_file = name.lower().replace(" ", "").replace("sports", "") + ".png"
-                    self.channels.append((name, logo_file))
-            self["menu"].setList([x[0] for x in self.channels])
-        except: pass
-
-    def start_sync(self):
-        idx = self["menu"].getSelectedIndex()
-        if idx < 0: return
-        name, logo_file = self.channels[idx]
-        full_logo_path = os.path.join(PLUGIN_PATH, "logos", logo_file)
-        if os.path.exists(full_logo_path):
-            self["dynamic_logo"].instance.setPixmapFromFile(full_logo_path)
-            self["dynamic_logo"].show()
-        os.system("echo 1 > /proc/stb/video/sync")
-        os.system("echo audio > /proc/stb/video/sync_source")
-        self["menu"].hide()
-
-    def exit(self):
-        os.system("echo pcr > /proc/stb/video/sync_source")
-        self.close()
-
-def main(session, **kwargs): session.open(WolfFinalSync)
-def Plugins(**kwargs):
-    return [PluginDescriptor(name="Wolf Auto Sync", where=PluginDescriptor.WHERE_PLUGINMENU, fnc=main)]
-EOF
+          # 3. إنشاء ملف plugin.py (Base64 - هاد الطريقة كتحمي السطر 21 وكل الأسطر)
+          echo "IyAtKi0gY29kaW5nOiB1dGYtOCAtKi0KaW1wb3J0IG9zLCB1cmxsaWIyCmZyb20gU2NyZWVucy5TY3JlZW4gaW1wb3J0IFNjcmVlbgpmcm9tIENvbXBvbmVudHMuUGl4bWFwIGltcG9ydCBQaXhtYXAKZnJvbSBDb21wb25lbnRzLk1lbnVMaXN0IGltcG9ydCBNZW51TGlzdApmcm9tIENvbXBvbmVudHMuQWN0aW9uTWFwIGltcG9yd BY3Rpb25NYXAKZnJvbSBQbHVnaW5zLlBsdWdpbiBpbXBvcnQgUGx1Z2luRGVzY3JpcHRvcgoKTTNVX1VSTCA9ICJodHRwczovL3d3dy5kcm9wYm94LmNvbS9zY2wvZmkvMm0yeTFhODllY3EzeDVpc3piZTF6L0FSX19CRUlOX1NQT1JUX1NELUhBTUFWTS5tM3U/cmxrZXk9bmtqZXpidGFjMWVweWtwcXImZmw9MSIKUExVR0lOX1BBVEggPSBvcy5wYXRoLmRpcm5hbWUoX19maWxlX18pCgpjbGFzcyBXb2xmRmluYWxTeW5jKFNjcmVlbik6CiAgICBza2luID0gIiIiPHNjcmVlbiBwb3NpdGlvbj0iMCwwIiBzaXplPSIxMjgwLDcyMCIgZmxhZ3M9IndmTm9Cb3JkZXIiIGJhY2tncm91bmRDb2xvcj0idHJhbnNwYXJlbnQiPgogICAgICAgIDx3aWRnZXQgbmFtZT0ibWVudSIgcG9zaXRpb249IjUwLDE1MCIgc2l6ZT0iNDUwLDQ1MCIgc2Nyb2xsYmFyTW9kZT0ic2hvd09uRGVtYW5kIiAvPgogICAgICAgIDx3aWRnZXQgbmFtZT0iZHluYW1pY19sb2dvIiBwb3NpdGlvbj0iMTAwMCw0MCIgc2l6ZT0iMjUwLDExMCIgYWxwaGF0ZXN0PSJibGVuZCIgelBvc2l0aW9uPSIxMCIgLz4KICAgIDwvc2NyZWVuPiIiIgogICAgZGVmIF9faW5pdF9fKHNlbGYsIHNlc3Npb24pOgogICAgICAgIFNjcmVlbi5fX2luaXRfXyhzZWxmLCBzZXNpb24pCiAgICAgICAgc2VsZi5jaGFubmVscyA9IFtdCiAgICAgICAgc2VsZlsibWVudSJdID0gTWVudUxpc3QoW10pCiAgICAgICAgc2VsZlsiZHluYW1pY19sb2dvIl0gPSBQaXhtYXAoKQogICAgICAgIHNlbGZbImFjdGlvbnMiXSA9IEFjdGlvbk1hcChbIlNldHVwQWN0aW9ucyJdLCB7Im9rIjogc2VsZi5zdGFydF9zeW5jLCAiY2FuY2VsIjogc2VsZi5leGl0fSwgLTEpCiAgICAgICAgc2VsZi5sb2FkX20zdSgpCiAgICBkZWYgbG9hZF9tM3Uoc2VsZik6CiAgICAgICAgdHJ5OgogICAgICAgICAgICByZXEgPSB1cmxsaWIyLnVybG9wZW4oTTNVX1VSTCkKICAgICAgICAgICAgZm9yIGxpbmUgaW4gcmVxLnJlYWRsaW5lcygpOgogICAgICAgICAgICAgICAgaWYgIiNFWFRJTkYiIGluIGxpbmU6CiAgICAgICAgICAgICAgICAgICAgbmFtZSA9IGxpbmUuc3BsaXQoIiwiKVstMV0uc3RyaXAoKQogICAgICAgICAgICAgICAgICAgIGxvZ29fZmlsZSA9IG5hbWUubG93ZXIoKS5yZXBsYWNlKCIgIiwgIiIpLnJlcGxhY2UoInNwb3J0cyIsICIiKSArICIucG5nIgogICAgICAgICAgICAgICAgICAgIHNlbGYuY2hhbm5lbHMuYXBwZW5kKChuYW1lLCBsb2dvX2ZpbGUpKQogICAgICAgICAgICBzZWxmWyJtZW51Il0uc2V0TGlzdChbeFswXSBmb3IgeCBpbiBzZWxmLmNoYW5uZWxzXSkKICAgICAgICBleGNlcHQ6IHBhc3MKICAgIGRlZiBzdGFydF9zeW5jKHNlbGYpOgogICAgICAgIGlkeCA9IHNlbGZbIm1lbnUiXS5nZXRTZWxlY3RlZEluZGV4KCkKICAgICAgICBpZiBpZHggPCAwOiByZXR1cm4KICAgICAgICBuYW1lLCBsb2dvX2ZpbGUgPSBzZWxmLmNoYW5uZWxzW2lkeF0KICAgICAgICBmdWxsX2xvZ29fcGF0aCA9IG9zLnBhdGguam9pbihQTFVHSU5fUEFUSCwgImxvZ29zIiwgbG9nb19maWxlKQogICAgICAgIGlmIG9zLnBhdGguZXhpc3RzKGZ1bGxfbG9nb19wYXRoKToKICAgICAgICAgICAgc2VsZlsiZHluYW1pY19sb2dvIl0uaW5zdGFuY2Uuc2V0UGl4bWFwRnJvbUZpbGUoZnVsbF9sb2dvX3BhdGgpCiAgICAgICAgICAgIHNlbGZbImR5bmFtaWNfbG9nbyJdLnNob3coKQogICAgICAgIG9zLnN5c3RlbSgiZWNobyAxID4gL3Byb2Mvc3RiL3ZpZGVvL3N5bmMiKQogICAgICAgIG9zLnN5c3RlbSgiZWNobyBhdWRpbyA+IC9wcm9jL3N0Yi92aWRlby9zeW5jX3NvdXJjZSIpCiAgICAgICAgc2VsZlsibWVudSJdLmhpZGUoKQogICAgZGVmIGV4aXQoc2VsZik6CiAgICAgICAgb3Muc3lzdGVtKCJlY2hvIHBjciA+IC9wcm9jL3N0Yi92aWRlby9zeW5jX3NvdXJjZSIpCiAgICAgICAgc2VsZi5jbG9zZSgpCmRlZiBtYWluKHNlc3Npb24sICoqdHdhcmdzKTogc2Vzc2lvbi5vcGVuKFdvbGZGaW5hbFN5bmMpCmRlZiBQbHVnaW5zKCoqdHdhcmdzKToKICAgIHJldHVybiBbUGx1Z2luRGVzY3JpcHRvcihuYW1lPSJXb2xmIEF1dG8gU3luYyIsIHdoZXJlPVBsdWdpbkRlc2NyaXB0b3IuV0hFUkVfUExVR0lOTUVOVSwgZm5jPW1haW4pXQo=" | base64 -d > Wolf/plugin.py
 
           # 4. نسخ الصور وجمع الـ NGZ
           if [ -d logos ]; then
@@ -99,5 +32,5 @@ EOF
       - name: Upload NGZ
         uses: actions/upload-artifact@v4
         with:
-          name: Wolf-Maroc-v1.0
+          name: Wolf-Maroc-Package
           path: WOLF.SERVER.ngz
