@@ -5,32 +5,42 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
+      # تفعيل Node.js 24 رسمياً لحل مشكلة التنبيه
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 # هذا الإصدار يدعم Node 24
 
-      - name: Create Plugin Files
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Create Plugin Structure
         run: |
           mkdir -p Wolf/logos
-
-          # 1. إنشاء ملف __init__.py (Base64)
+          
+          # إنشاء ملف التعريف __init__.py
           echo "IyAtKi0gY29kaW5nOiB1dGYtOCAtKi0KZnJvbSBvcy5wYXRoIGltcG9ydCBkaXJuYW1lCmRlZiBnZXRQbHVnaW5QYXRoKCk6CiAgICByZXR1cm4gZGlybmFtZShfX2ZpbGVfXyk=" | base64 -d > Wolf/__init__.py
-
-          # 2. إنشاء ملف plugin.info (Base64)
+          
+          # إنشاء ملف المعلومات plugin.info
           echo "bmFtZT1Xb2xmIEF1dG8gU3luYwpkZXNjcmlwdGlvbj1BdXRvIEF1ZGlvIFN5bmMgJiBMb2dvcyBieSBXb2xmIE1hcm9jCnZlcnNpb249MS4wCmF1dGhvcj1Xb2xmIE1hcm9j" | base64 -d > Wolf/plugin.info
+          
+          # إنشاء كود البلوجين plugin.py (نسخة المزامنة التلقائية واللوغو)
+          echo "IyAtKi0gY29kaW5nOiB1dGYtOCAtKi0KaW1wb3J0IG9zLCB1cmxsaWIyCmZyb20gU2NyZWVucy5TY3JlZW4gaW1wb3J0IFNjcmVlbgpmcm9tIENvbXBvbmVudHMuUGl4bWFwIGltcG9ydCBQaXhtYXAKZnJvbSBDb21wb25lbnRzLk1lbnVMaXN0IGltcG9ydCBNZW51TGlzdApmcm9tIENvbXBvbmVudHMuQWN0aW9uTWFwIGltcG9yd BY3Rpb25NYXAKZnJvbSBQbHVnaW5zLlBsdWdpbiBpbXBvcnQgUGx1Z2luRGVzY3JpcHRvcgoKTTNVX1VSTCA9ICJodHRwczovL3d3dy5kcm9wYm94LmNvbS9zY2wvZmkvMm0yeTFhODllY3EzeDVpc3piZTF6L0FSX19CRUlOX1NQT1JUX1NELUhBTUFWTS5mcm11JmRsPTEiClBMVUdJTl9QQVRIID0gb3MucGF0aC5kaXJuYW1lKF9fZmlsZV9fKQpjbGFzcyBXb2xmRmluYWxTeW5jKFNjcmVlbik6CiAgICBza2luID0gIiIiPHNjcmVlbiBwb3NpdGlvbj0iMCwwIiBzaXplPSIxMjgwLDcyMCIgZmxhZ3M9IndmTm9Cb3JkZXIiIGJhY2tncm91bmRDb2xvcj0idHJhbnNwYXJlbnQiPgogICAgICAgIDx3aWRnZXQgbmFtZT0ibWVudSIgcG9zaXRpb249IjUwLDE1MCIgc2l6ZT0iNDUwLDQ1MCIgc2Nyb2xsYmFyTW9kZT0ic2hvd09uRGVtYW5kIiAvPgogICAgICAgIDx3aWRnZXQgbmFtZT0iZHluYW1pY19sb2dvIiBwb3NpdGlvbj0iMTAwMCw0MCIgc2l6ZT0iMjUwLDExMCIgYWxwaGF0ZXN0PSJibGVuZCIgelBvc2l0aW9uPSIxMCIgLz4KICAgIDwvc2NyZWVuPiIiIgogICAgZGVmIF9faW5pdF9fKHNlbGYsIHNlc3Npb24pOgogICAgICAgIFNjcmVlbi5fX2luaXRfXyhzZWxmLCBzZXNpb24pCiAgICAgICAgc2VsZi5jaGFubmVscyA9IFtdCiAgICAgICAgc2VsZlsibWVudSJdID0gTWVudUxpc3QoW10pCiAgICAgICAgc2VsZlsiZHluYW1pY19sb2dvIl0gPSBQaXhtYXAoKQogICAgICAgIHNlbGZbImFjdGlvbnMiXSA9IEFjdGlvbk1hcChbIlNldHVwQWN0aW9ucyJdLCB7Im9rIjogc2VsZi5zdGFydF9zeW5jLCAiY2FuY2VsIjogc2VsZi5leGl0fSwgLTEpCiAgICAgICAgc2VsZi5sb2FkX20zdSgpCiAgICBkZWYgbG9hZF9tM3Uoc2VsZik6CiAgICAgICAgdHJ5OgogICAgICAgICAgICByZXEgPSB1cmxsaWIyLnVybG9wZW4oTTNVX1VSTCkKICAgICAgICAgICAgZm9yIGxpbmUgaW4gcmVxLnJlYWRsaW5lcygpOgogICAgICAgICAgICAgICAgaWYgIiNFWFRJTkYiIGluIGxpbmU6CiAgICAgICAgICAgICAgICAgICAgbmFtZSA9IGxpbmUuc3BsaXQoIiwiKVstMV0uc3RyaXAoKQogICAgICAgICAgICAgICAgICAgIGxvZ29fZmlsZSA9IG5hbWUubG93ZXIoKS5yZXBsYWNlKCIgIiwgIiIpLnJlcGxhY2UoInNwb3J0cyIsICIiKSArICIucG5nIgogICAgICAgICAgICAgICAgICAgIHNlbGYuY2hhbm5lbHMuYXBwZW5kKChuYW1lLCBsb2dvX2ZpbGUpKQogICAgICAgICAgICBzZWxmWyJtZW51Il0uc2V0TGlzdChbeFswXSBmb3IgeCBpbiBzZWxmLmNoYW5uZWxzXSkKICAgICAgICBleGNlcHQ6IHBhc3MKICAgIGRlZiBzdGFydF9zeW5jKHNlbGYpOgogICAgICAgIGlkeCA9IHNlbGZbIm1lbnUiXS5nZXRTZWxlY3RlZEluZGV4KCkKICAgICAgICBpZiBpZHggPCAwOiByZXR1cm4KICAgICAgICBuYW1lLCBsb2dvX2ZpbGUgPSBzZWxmLmNoYW5uZWxzW2lkeF0KICAgICAgICBmdWxsX2xvZ29fcGF0aCA9IG9zLnBhdGguam9pbihQTFVHSU5fUEFUSCwgImxvZ29zIiwgbG9nb19maWxlKQogICAgICAgIGlmIG9zLnBhdGguZXhpc3RzKGZ1bGxfbG9nb19wYXRoKToKICAgICAgICAgICAgc2VsZlsiZHluYW1pY19sb2dvIl0uaW5zdGFuY2Uuc2V0UGl4bWFwRnJvbUZpbGUoZnVsbF9sb2dvX3BhdGgpCiAgICAgICAgICAgIHNlbGZbImR5bmFtaWNfbG9nbyJdLnNob3coKQogICAgICAgIG9zLnN5c3RlbSgiZWNobyAxID4gL3Byb2Mvc3RiL3ZpZGVvL3N5bmMiKQogICAgICAgIG9zLnN5c3RlbSgiZWNobyBhdWRpbyA+IC9wcm9jL3N0Yi92aWRlby9zeW5jX3NvdXJjZSIpCiAgICAgICAgc2VsZlsibWVudSJdLmhpZGUoKQogICAgZGVmIGV4aXQoc2VsZik6CiAgICAgICAgb3Muc3lzdGVtKCJlY2hvIHBjciA+IC9wcm9jL3N0Yi92aWRlby9zeW5jX3NvdXJjZSIpCiAgICAgICAgc2VsZi5jbG9zZSgpCmRlZiBtYWluKHNlc3Npb24sICoqdHdhcmdzKTogc2Vzc2lvbi5vcGVuKFdvbGZGaW5hbFN5bmMpCmRlZiBQbHVnaW5zKCoqdHdhcmdzKToKICAgIHJldHVybiBbUGx1Z2luRGVzY3JpcHRvcihuYW1lPSJXb2xmIEF1dG8gU3luYyIsIHdoZXJlPVBsdWdpbkRlc2NyaXB0b3IuV0hFUkVfUExVR0lOTUVOVSwgZm5jPW1haW4pXQo=" | base64 -d > Wolf/plugin.py
 
-          # 3. إنشاء ملف plugin.py (Base64 - هاد الطريقة كتحمي السطر 21 وكل الأسطر)
-          echo "IyAtKi0gY29kaW5nOiB1dGYtOCAtKi0KaW1wb3J0IG9zLCB1cmxsaWIyCmZyb20gU2NyZWVucy5TY3JlZW4gaW1wb3J0IFNjcmVlbgpmcm9tIENvbXBvbmVudHMuUGl4bWFwIGltcG9ydCBQaXhtYXAKZnJvbSBDb21wb25lbnRzLk1lbnVMaXN0IGltcG9ydCBNZW51TGlzdApmcm9tIENvbXBvbmVudHMuQWN0aW9uTWFwIGltcG9yd BY3Rpb25NYXAKZnJvbSBQbHVnaW5zLlBsdWdpbiBpbXBvcnQgUGx1Z2luRGVzY3JpcHRvcgoKTTNVX1VSTCA9ICJodHRwczovL3d3dy5kcm9wYm94LmNvbS9zY2wvZmkvMm0yeTFhODllY3EzeDVpc3piZTF6L0FSX19CRUlOX1NQT1JUX1NELUhBTUFWTS5tM3U/cmxrZXk9bmtqZXpidGFjMWVweWtwcXImZmw9MSIKUExVR0lOX1BBVEggPSBvcy5wYXRoLmRpcm5hbWUoX19maWxlX18pCgpjbGFzcyBXb2xmRmluYWxTeW5jKFNjcmVlbik6CiAgICBza2luID0gIiIiPHNjcmVlbiBwb3NpdGlvbj0iMCwwIiBzaXplPSIxMjgwLDcyMCIgZmxhZ3M9IndmTm9Cb3JkZXIiIGJhY2tncm91bmRDb2xvcj0idHJhbnNwYXJlbnQiPgogICAgICAgIDx3aWRnZXQgbmFtZT0ibWVudSIgcG9zaXRpb249IjUwLDE1MCIgc2l6ZT0iNDUwLDQ1MCIgc2Nyb2xsYmFyTW9kZT0ic2hvd09uRGVtYW5kIiAvPgogICAgICAgIDx3aWRnZXQgbmFtZT0iZHluYW1pY19sb2dvIiBwb3NpdGlvbj0iMTAwMCw0MCIgc2l6ZT0iMjUwLDExMCIgYWxwaGF0ZXN0PSJibGVuZCIgelBvc2l0aW9uPSIxMCIgLz4KICAgIDwvc2NyZWVuPiIiIgogICAgZGVmIF9faW5pdF9fKHNlbGYsIHNlc3Npb24pOgogICAgICAgIFNjcmVlbi5fX2luaXRfXyhzZWxmLCBzZXNpb24pCiAgICAgICAgc2VsZi5jaGFubmVscyA9IFtdCiAgICAgICAgc2VsZlsibWVudSJdID0gTWVudUxpc3QoW10pCiAgICAgICAgc2VsZlsiZHluYW1pY19sb2dvIl0gPSBQaXhtYXAoKQogICAgICAgIHNlbGZbImFjdGlvbnMiXSA9IEFjdGlvbk1hcChbIlNldHVwQWN0aW9ucyJdLCB7Im9rIjogc2VsZi5zdGFydF9zeW5jLCAiY2FuY2VsIjogc2VsZi5leGl0fSwgLTEpCiAgICAgICAgc2VsZi5sb2FkX20zdSgpCiAgICBkZWYgbG9hZF9tM3Uoc2VsZik6CiAgICAgICAgdHJ5OgogICAgICAgICAgICByZXEgPSB1cmxsaWIyLnVybG9wZW4oTTNVX1VSTCkKICAgICAgICAgICAgZm9yIGxpbmUgaW4gcmVxLnJlYWRsaW5lcygpOgogICAgICAgICAgICAgICAgaWYgIiNFWFRJTkYiIGluIGxpbmU6CiAgICAgICAgICAgICAgICAgICAgbmFtZSA9IGxpbmUuc3BsaXQoIiwiKVstMV0uc3RyaXAoKQogICAgICAgICAgICAgICAgICAgIGxvZ29fZmlsZSA9IG5hbWUubG93ZXIoKS5yZXBsYWNlKCIgIiwgIiIpLnJlcGxhY2UoInNwb3J0cyIsICIiKSArICIucG5nIgogICAgICAgICAgICAgICAgICAgIHNlbGYuY2hhbm5lbHMuYXBwZW5kKChuYW1lLCBsb2dvX2ZpbGUpKQogICAgICAgICAgICBzZWxmWyJtZW51Il0uc2V0TGlzdChbeFswXSBmb3IgeCBpbiBzZWxmLmNoYW5uZWxzXSkKICAgICAgICBleGNlcHQ6IHBhc3MKICAgIGRlZiBzdGFydF9zeW5jKHNlbGYpOgogICAgICAgIGlkeCA9IHNlbGZbIm1lbnUiXS5nZXRTZWxlY3RlZEluZGV4KCkKICAgICAgICBpZiBpZHggPCAwOiByZXR1cm4KICAgICAgICBuYW1lLCBsb2dvX2ZpbGUgPSBzZWxmLmNoYW5uZWxzW2lkeF0KICAgICAgICBmdWxsX2xvZ29fcGF0aCA9IG9zLnBhdGguam9pbihQTFVHSU5fUEFUSCwgImxvZ29zIiwgbG9nb19maWxlKQogICAgICAgIGlmIG9zLnBhdGguZXhpc3RzKGZ1bGxfbG9nb19wYXRoKToKICAgICAgICAgICAgc2VsZlsiZHluYW1pY19sb2dvIl0uaW5zdGFuY2Uuc2V0UGl4bWFwRnJvbUZpbGUoZnVsbF9sb2dvX3BhdGgpCiAgICAgICAgICAgIHNlbGZbImR5bmFtaWNfbG9nbyJdLnNob3coKQogICAgICAgIG9zLnN5c3RlbSgiZWNobyAxID4gL3Byb2Mvc3RiL3ZpZGVvL3N5bmMiKQogICAgICAgIG9zLnN5c3RlbSgiZWNobyBhdWRpbyA+IC9wcm9jL3N0Yi92aWRlby9zeW5jX3NvdXJjZSIpCiAgICAgICAgc2VsZlsibWVudSJdLmhpZGUoKQogICAgZGVmIGV4aXQoc2VsZik6CiAgICAgICAgb3Muc3lzdGVtKCJlY2hvIHBjciA+IC9wcm9jL3N0Yi92aWRlby9zeW5jX3NvdXJjZSIpCiAgICAgICAgc2VsZi5jbG9zZSgpCmRlZiBtYWluKHNlc3Npb24sICoqdHdhcmdzKTogc2Vzc2lvbi5vcGVuKFdvbGZGaW5hbFN5bmMpCmRlZiBQbHVnaW5zKCoqdHdhcmdzKToKICAgIHJldHVybiBbUGx1Z2luRGVzY3JpcHRvcihuYW1lPSJXb2xmIEF1dG8gU3luYyIsIHdoZXJlPVBsdWdpbkRlc2NyaXB0b3IuV0hFUkVfUExVR0lOTUVOVSwgZm5jPW1haW4pXQo=" | base64 -d > Wolf/plugin.py
-
-          # 4. نسخ الصور وجمع الـ NGZ
+      - name: Copy Logos and Pack NGZ
+        run: |
+          # نسخ الصور من مستودع GitHub إلى المجلد
           if [ -d logos ]; then
-            cp logos/*.png Wolf/logos/ 2>/dev/null || true
+            cp logos/*.png Wolf/logos/ 2>/dev/null || echo "No logos found in repository"
           fi
+          
+          # ضغط الملف النهائي بصيغة NGZ (وهي أصلاً TAR)
           tar -cvf WOLF.SERVER.ngz Wolf/
 
-      - name: Upload NGZ
+      - name: Upload Finished NGZ
         uses: actions/upload-artifact@v4
         with:
-          name: Wolf-Maroc-Package
+          name: Wolf-Maroc-2026-v1.0
           path: WOLF.SERVER.ngz
