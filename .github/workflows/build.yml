@@ -5,23 +5,30 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      # تفعيل Node.js 24 باش نحيدو التنبيه
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      # هاد السطر هو اللي كيحيد التحذير وكيفعل Node.js 24
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Packaging Wolf Plugin
         run: |
-          # 1. إنشاء هيكل المجلدات
+          # مسح أي بقايا قديمة
+          rm -rf Wolf WOLF.SERVER.ngz
+          
+          # إنشاء المجلدات
           mkdir -p Wolf/logos
           
-          # 2. نسخ الملفات (تأكد أن الملفات بهاد السميات عندك في GitHub)
-          cp plugin.py Wolf/
-          cp __init__.py Wolf/
-          cp logos/*.png Wolf/logos/
+          # نسخ الملفات (تأكد أن هاد الملفات كاينة في الـ Root ديال GitHub)
+          [ -f plugin.py ] && cp plugin.py Wolf/
+          [ -f __init__.py ] && cp __init__.py Wolf/
           
-          # 3. الضغط بصيغة TAR وتغيير الاسم لـ NGZ
+          # نسخ الصور من مجلد logos
+          if [ -d logos ]; then
+            cp logos/*.png Wolf/logos/ 2>/dev/null || echo "No images found"
+          fi
+          
+          # جمع كلشي في ملف NGZ
           tar -cvf WOLF.SERVER.ngz Wolf/
 
       - name: Upload NGZ Artifact
