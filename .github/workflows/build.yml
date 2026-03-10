@@ -4,16 +4,27 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # تفعيل Node.js 24 باش نحيدو التنبيه
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
-      - uses: actions/checkout@v4
-      - name: Packaging
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Packaging Wolf Plugin
         run: |
+          # 1. إنشاء هيكل المجلدات
           mkdir -p Wolf/logos
+          
+          # 2. نسخ الملفات (تأكد أن الملفات بهاد السميات عندك في GitHub)
           cp plugin.py Wolf/
           cp __init__.py Wolf/
           cp logos/*.png Wolf/logos/
+          
+          # 3. الضغط بصيغة TAR وتغيير الاسم لـ NGZ
           tar -cvf WOLF.SERVER.ngz Wolf/
-      - name: Upload
+
+      - name: Upload NGZ Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Wolf-Plugin-Package
