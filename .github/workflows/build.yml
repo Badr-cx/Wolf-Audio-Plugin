@@ -5,34 +5,96 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      # هاد السطر هو اللي كيحيد التحذير وكيفعل Node.js 24
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Packaging Wolf Plugin
+      - name: Create Plugin Files Automatically
         run: |
-          # مسح أي بقايا قديمة
-          rm -rf Wolf WOLF.SERVER.ngz
-          
-          # إنشاء المجلدات
+          # 1. إنشاء المجلدات
           mkdir -p Wolf/logos
-          
-          # نسخ الملفات (تأكد أن هاد الملفات كاينة في الـ Root ديال GitHub)
-          [ -f plugin.py ] && cp plugin.py Wolf/
-          [ -f __init__.py ] && cp __init__.py Wolf/
-          
-          # نسخ الصور من مجلد logos
+
+          # 2. إنشاء ملف __init__.py
+          echo "# -*- coding: utf-8 -*-" > Wolf/__init__.py
+          echo "from os.path import dirname" >> Wolf/__init__.py
+          echo "def getPluginPath(): return dirname(__file__)" >> Wolf/__init__.py
+
+          # 3. إنشاء ملف plugin.info
+          echo "name=Wolf Auto Sync" > Wolf/plugin.info
+          echo "description=Auto Audio Sync & Logos by Wolf Maroc" >> Wolf/plugin.info
+          echo "version=1.0" >> Wolf/plugin.info
+          echo "author=Wolf Maroc" >> Wolf/plugin.info
+
+          # 4. إنشاء ملف plugin.py (الكود الكامل)
+          cat <<EOF > Wolf/plugin.py
+# -*- coding: utf-8 -*-
+import os, urllib2
+from Screens.Screen import Screen
+from Components.Pixmap import Pixmap
+from Components.MenuList import MenuList
+from Components.ActionMap import ActionMap
+from Plugins.Plugin import PluginDescriptor
+
+M3U_URL = "https://www.dropbox.com/scl/fi/2m2y1a89ecq3x5iszbe1z/AR__BEIN_SPORT_SD-HAMAVM.m3u?rlkey=nkjezbtac1epykpqr4fwz9rmu&dl=1"
+PLUGIN_PATH = os.path.dirname(__file__)
+
+class WolfFinalSync(Screen):
+    skin = """<screen position="0,0" size="1280,720" flags="wfNoBorder" backgroundColor="transparent">
+        <widget name="menu" position="50,150" size="450,450" scrollbarMode="showOnDemand" />
+        <widget name="dynamic_logo" position="1000,40" size="250,110" alphatest="blend" zPosition="10" />
+    </screen>"""
+
+    def __init__(self, session):
+        Screen.__init__(self, session)
+        self.channels = []
+        self["menu"] = MenuList([])
+        self["dynamic_logo"] = Pixmap()
+        self["actions"] = ActionMap(["SetupActions"], {"ok": self.start_sync, "cancel": self.exit}, -1)
+        self.load_m3u()
+
+    def load_m3u(self):
+        try:
+            req = urllib2.urlopen(M3U_URL)
+            for line in req.readlines():
+                if "#EXTINF" in line:
+                    name = line.split(",")[-1].strip()
+                    logo_file = name.lower().replace(" ", "").replace("sports", "") + ".png"
+                    self.channels.append((name, logo_file))
+            self["menu"].setList([x[0] for x in self.channels])
+        except: pass
+
+    def start_sync(self):
+        idx = self["menu"].getSelectedIndex()
+        if idx < 0: return
+        name, logo_file = self.channels[idx]
+        full_logo_path = os.path.join(PLUGIN_PATH, "logos", logo_file)
+        if os.path.exists(full_logo_path):
+            self["dynamic_logo"].instance.setPixmapFromFile(full_logo_path)
+            self["dynamic_logo"].show()
+        os.system("echo 1 > /proc/stb/video/sync")
+        os.system("echo audio > /proc/stb/video/sync_source")
+        self["menu"].hide()
+
+    def exit(self):
+        os.system("echo pcr > /proc/stb/video/sync_source")
+        self.close()
+
+def main(session, **kwargs): session.open(WolfFinalSync)
+def Plugins(**kwargs):
+    return [PluginDescriptor(name="Wolf Auto Sync", where=PluginDescriptor.WHERE_PLUGINMENU, fnc=main)]
+EOF
+
+          # 5. نسخ الصور (خاص يكون عندك مجلد logos فيه الصور في GitHub)
           if [ -d logos ]; then
-            cp logos/*.png Wolf/logos/ 2>/dev/null || echo "No images found"
+            cp logos/*.png Wolf/logos/
           fi
-          
-          # جمع كلشي في ملف NGZ
+
+          # 6. الجمع النهائي
           tar -cvf WOLF.SERVER.ngz Wolf/
 
-      - name: Upload NGZ Artifact
+      - name: Upload NGZ
         uses: actions/upload-artifact@v4
         with:
-          name: Wolf-Plugin-Package
+          name: Wolf-Maroc-v1.0
           path: WOLF.SERVER.ngz
